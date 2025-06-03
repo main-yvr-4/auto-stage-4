@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Layout, 
   Button, 
@@ -43,11 +43,18 @@ const TOOLS = {
 };
 
 const ManualLabeling = () => {
-  const { datasetId, imageId } = useParams();
+  console.log('ManualLabeling component loaded');
+  const { datasetId } = useParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const imageId = searchParams.get('imageId');
+  console.log('URL params:', { datasetId, imageId });
   const navigate = useNavigate();
   
   // State management
   const [currentTool, setCurrentTool] = useState(TOOLS.BBOX);
+  const [imageList, setImageList] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [zoom, setZoom] = useState(0.76);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [annotations, setAnnotations] = useState([]);
@@ -79,17 +86,44 @@ const ManualLabeling = () => {
   const imageRef = useRef();
   const transformerRef = useRef();
 
+  // Load image list
+  useEffect(() => {
+    const loadImageList = async () => {
+      try {
+        console.log('Loading image list for dataset:', datasetId);
+        const response = await fetch(`/api/v1/datasets/${datasetId}/images?skip=0&limit=1000`);
+        const data = await response.json();
+        console.log('Image list loaded:', data.images);
+        setImageList(data.images);
+        
+        // Find current image index
+        const currentIndex = data.images.findIndex(img => img.id === imageId);
+        console.log('Current image index:', currentIndex, 'for imageId:', imageId);
+        setCurrentImageIndex(currentIndex >= 0 ? currentIndex : 0);
+      } catch (error) {
+        console.error('Error loading image list:', error);
+        message.error('Failed to load image list');
+      }
+    };
+
+    if (datasetId) {
+      loadImageList();
+    }
+  }, [datasetId, imageId]);
+
   // Load image
   useEffect(() => {
     const loadImage = async () => {
+      console.log('loadImage function called with datasetId:', datasetId, 'imageId:', imageId);
       try {
-        const response = await fetch(`/api/v1/datasets/${datasetId}/images/${imageId}`);
+        const response = await fetch(`/api/v1/datasets/images/${imageId}`);
         const data = await response.json();
         setImageData(data);
         
         const img = new window.Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
+          console.log('Image loaded successfully:', img.src);
           setKonvaImage(img);
           // Center image
           const stage = stageRef.current;
@@ -102,7 +136,12 @@ const ManualLabeling = () => {
             });
           }
         };
-        img.src = data.url || `/api/v1/datasets/${datasetId}/images/${imageId}/file`;
+        img.onerror = (error) => {
+          console.error('Image failed to load:', img.src, error);
+        };
+        const imageSrc = data.file_path || `/api/v1/datasets/${datasetId}/images/${imageId}/file`;
+        console.log('Loading image from:', imageSrc);
+        img.src = imageSrc;
       } catch (error) {
         console.error('Error loading image:', error);
         message.error('Failed to load image');
@@ -161,6 +200,25 @@ const ManualLabeling = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [selectedAnnotationId]);
+
+  // Navigation functions
+  const handlePreviousImage = () => {
+    if (currentImageIndex > 0 && imageList.length > 0) {
+      const prevImage = imageList[currentImageIndex - 1];
+      navigate(`/annotate/${datasetId}/manual?imageId=${prevImage.id}`);
+    }
+  };
+
+  const handleNextImage = () => {
+    console.log('NEXT BUTTON CLICKED - UPDATED VERSION!', { currentImageIndex, imageListLength: imageList.length });
+    if (currentImageIndex < imageList.length - 1 && imageList.length > 0) {
+      const nextImage = imageList[currentImageIndex + 1];
+      console.log('Navigating to next image:', nextImage.id);
+      navigate(`/annotate/${datasetId}/manual?imageId=${nextImage.id}`);
+    } else {
+      console.log('Cannot navigate: at last image or no images loaded');
+    }
+  };
 
   // Canvas event handlers
   const handleStageMouseDown = (e) => {
@@ -341,12 +399,28 @@ const ManualLabeling = () => {
             </Button>
           </Tooltip>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Text strong style={{ fontSize: '16px' }}>1 / 3</Text>
-            <Button size="small" disabled style={{ marginLeft: '8px' }}>← Previous</Button>
-            <Button size="small" style={{ marginLeft: '8px' }}>Next →</Button>
+            <Text strong style={{ fontSize: '16px' }}>
+              {imageList.length > 0 ? `${currentImageIndex + 1} / ${imageList.length}` : '1 / 3'}
+            </Text>
+            <Button 
+              size="small" 
+              disabled={currentImageIndex <= 0 || imageList.length === 0}
+              onClick={handlePreviousImage}
+              style={{ marginLeft: '8px' }}
+            >
+              ← Previous
+            </Button>
+            <Button 
+              size="small" 
+              disabled={currentImageIndex >= imageList.length - 1 || imageList.length === 0}
+              onClick={handleNextImage}
+              style={{ marginLeft: '8px' }}
+            >
+              Next →
+            </Button>
           </div>
         </div>
-        <Text strong>{imageData?.filename || 'animal_cat.jpg'}</Text>
+        <Text strong>{imageData?.filename || 'Loading...'}</Text>
       </div>
 
       {/* Main Layout */}
