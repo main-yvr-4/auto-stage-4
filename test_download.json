@@ -1,0 +1,51 @@
+{
+  "info": {
+    "description": "test_dataset - Auto-Labeling Tool Export",
+    "version": "1.0",
+    "year": 2025,
+    "contributor": "Auto-Labeling Tool",
+    "date_created": "2025-05-27T10:07:31.434302"
+  },
+  "licenses": [
+    {
+      "id": 1,
+      "name": "Unknown",
+      "url": ""
+    }
+  ],
+  "images": [
+    {
+      "id": 1,
+      "width": 800,
+      "height": 600,
+      "file_name": "test_image.jpg",
+      "license": 1,
+      "flickr_url": "",
+      "coco_url": "",
+      "date_captured": "2025-05-27T10:07:31.434314"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 0,
+      "category_id": 1,
+      "segmentation": [],
+      "area": 30000,
+      "bbox": [
+        100,
+        100,
+        200,
+        150
+      ],
+      "iscrowd": 0
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "person",
+      "supercategory": "object"
+    }
+  ]
+}
