@@ -42,7 +42,7 @@ const TOOLS = {
   MARK_NULL: 'mark_null'
 };
 
-const AnnotateRoboflow = () => {
+const ManualLabeling = () => {
   const { datasetId, imageId } = useParams();
   const navigate = useNavigate();
   
@@ -776,4 +776,4 @@ const AnnotateRoboflow = () => {
   );
 };
 
-export default AnnotateRoboflow;
+export default ManualLabeling;

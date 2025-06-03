@@ -222,10 +222,18 @@ class FileHandler:
         db = SessionLocal()
         try:
             image = ImageOperations.get_image(db, image_id)
-            if image and os.path.exists(image.file_path):
-                # Return relative path for serving via FastAPI static files
-                relative_path = os.path.relpath(image.file_path, settings.UPLOAD_DIR)
-                return f"/uploads/{relative_path}"
+            if image and image.file_path:
+                # Handle both absolute and relative paths
+                if os.path.isabs(image.file_path):
+                    file_path = image.file_path
+                else:
+                    # If relative path, make it absolute
+                    file_path = os.path.join(settings.BASE_DIR, image.file_path)
+                
+                if os.path.exists(file_path):
+                    # Return relative path for serving via FastAPI static files
+                    relative_path = os.path.relpath(file_path, settings.UPLOAD_DIR)
+                    return f"/uploads/{relative_path}"
             return None
         finally:
             db.close()
