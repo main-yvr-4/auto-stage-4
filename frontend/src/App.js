@@ -11,7 +11,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import ProjectWorkspace from './pages/ProjectWorkspace';
 import AnnotateLauncher from './pages/AnnotateLauncher';
 import AnnotateProgress from './pages/AnnotateProgress';
-import AnnotateRoboflow from './pages/AnnotateRoboflow';
+import ManualLabeling from './pages/ManualLabeling';
 // Removed: Datasets, DatasetDetailModern, ActiveLearningDashboard, Annotate (old)
 // These will be integrated into Projects
 
@@ -38,7 +38,7 @@ function App() {
                 <Route path="/projects/:projectId" element={<ProjectDetail />} />
                 <Route path="/annotate-launcher/:datasetId" element={<AnnotateLauncher />} />
                 <Route path="/annotate-progress/:datasetId" element={<AnnotateProgress />} />
-                <Route path="/annotate/:datasetId/manual" element={<AnnotateRoboflow />} />
+                <Route path="/annotate/:datasetId/manual" element={<ManualLabeling />} />
                 {/* Removed standalone routes: /datasets, /active-learning, /projects/:projectId/annotate */}
                 {/* These features will be integrated within project workflows */}
               </Routes>
